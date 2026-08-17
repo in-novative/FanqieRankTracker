@@ -1,0 +1,196 @@
+{
+  "date": "2026-08-17",
+  "prev_date": "",
+  "trends": {
+    "西方奇幻": {
+      "new_count": 0,
+      "dropped_count": 0,
+      "new_books": [],
+      "dropped_books": [],
+      "top_risers": [],
+      "top_fallers": [],
+      "reads_growth": [],
+      "summary": "榜单无明显变动。"
+    },
+    "东方仙侠": {
+      "new_count": 0,
+      "dropped_count": 0,
+      "new_books": [],
+      "dropped_books": [],
+      "top_risers": [],
+      "top_fallers": [],
+      "reads_growth": [],
+      "summary": "**🔥 题材趋势** 洪荒流一家独大，占据榜单6席（红云、玉帝、冥河、世界树等细分切入），但多集中在中尾部；养成、变身、女尊等情感向题材在头部表现强势。\n**📖 读者偏好** 单女主养成与情感钩子最能破圈（榜首16.8万在读）；反套路、苟道、诙谐解构等“反严肃仙侠”笔法受欢迎；传统无脑升级流声量走弱。\n**🆕 新上榜作品** 本期无新上榜作品。\n**📉 掉出榜单** 本期无作品掉榜。\n**💡 值得关注** 洪荒题材入场者众但同质化加剧，均读偏低（3-6万档），需警惕饱和；《捡来的妹妹》以“养成+单女主”跨圈层获客，是题材破壁样本。"
+    },
+    "科幻末世": {
+      "new_count": 0,
+      "dropped_count": 0,
+      "new_books": [],
+      "dropped_books": [],
+      "top_risers": [],
+      "top_fallers": [],
+      "reads_growth": [],
+      "summary": "榜单无明显变动。"
+    },
+    "都市日常": {
+      "new_count": 0,
+      "dropped_count": 0,
+      "new_books": [],
+      "dropped_books": [],
+      "top_risers": [],
+      "top_fallers": [],
+      "reads_growth": [],
+      "summary": "榜单无明显变动。"
+    },
+    "都市修真": {
+      "new_count": 0,
+      "dropped_count": 0,
+      "new_books": [],
+      "dropped_books": [],
+      "top_risers": [],
+      "top_fallers": [],
+      "reads_growth": [],
+      "summary": "榜单无明显变动。"
+    },
+    "都市高武": {
+      "new_count": 0,
+      "dropped_count": 0,
+      "new_books": [],
+      "dropped_books": [],
+      "top_risers": [],
+      "top_fallers": [],
+      "reads_growth": [],
+      "summary": "榜单无明显变动。"
+    },
+    "历史古代": {
+      "new_count": 0,
+      "dropped_count": 0,
+      "new_books": [],
+      "dropped_books": [],
+      "top_risers": [],
+      "top_fallers": [],
+      "reads_growth": [],
+      "summary": "**🔥 题材趋势** 穿越/重生架空历史全面主导，唐、秦、三国等经典朝代IP持续霸榜；“身份反差+轻松搞笑”成主流包装，脑洞化、爽文化明显，正剧向仅《东晋》一部坚守。\n**📖 读者偏好** 强设定开局（穿成太子/宰相/皇子后代）、快节奏打脸与权谋爽感受捧；无女主与多女主两极并存，对话体吐槽风简介点击转化高。\n**🆕 新上榜作品** 本期无新上榜，榜单结构稳定，头部格局固化。\n**📉 掉出榜单** 无作品掉榜，Top20完整延续，竞争进入平稳期。\n**💡 值得关注** 榜首《家父造反成功》以22.3万在读断层领先，“父慈子孝”反差梗验证有效；女诸侯、病娇长公主等女性向元素渗透男频榜单，或成新增长点。"
+    },
+    "战神赘婿": {
+      "new_count": 0,
+      "dropped_count": 0,
+      "new_books": [],
+      "dropped_books": [],
+      "top_risers": [],
+      "top_fallers": [],
+      "reads_growth": [],
+      "summary": "**🔥 题材趋势** 传统战神归来/龙王赘婿套路仍在，但头部被“雇佣兵枪神”“都市武道重生”等变体抢占；题材整体在读量偏低，内卷与迭代压力大。\n**📖 读者偏好** “身份反转+打脸逆袭”核心爽点依旧，但要求开局即高能（离婚/退婚当天翻盘）；无系统、写实向写法开始替代纯金手指。\n**🆕 新上榜作品** 本期无新上榜，榜单结构稳定。\n**📉 掉出榜单** 无作品掉榜，尾部流量趋于固化。\n**💡 值得关注** 榜首9.8万在读对第二名（2.7万）呈碾压式领先，头部虹吸严重；“女子监狱”“退役战友”等猎奇混搭设定上位，显示传统赘婿流量正向题材融合迁移。"
+    },
+    "都市种田": {
+      "new_count": 0,
+      "dropped_count": 0,
+      "new_books": [],
+      "dropped_books": [],
+      "top_risers": [],
+      "top_fallers": [],
+      "reads_growth": [],
+      "summary": "榜单无明显变动。"
+    },
+    "传统玄幻": {
+      "new_count": 0,
+      "dropped_count": 0,
+      "new_books": [],
+      "dropped_books": [],
+      "top_risers": [],
+      "top_fallers": [],
+      "reads_growth": [],
+      "summary": "榜单无明显变动。"
+    },
+    "历史脑洞": {
+      "new_count": 0,
+      "dropped_count": 0,
+      "new_books": [],
+      "dropped_books": [],
+      "top_risers": [],
+      "top_fallers": [],
+      "reads_growth": [],
+      "summary": "榜单无明显变动。"
+    },
+    "悬疑脑洞": {
+      "new_count": 0,
+      "dropped_count": 0,
+      "new_books": [],
+      "dropped_books": [],
+      "top_risers": [],
+      "top_fallers": [],
+      "reads_growth": [],
+      "summary": "榜单无明显变动。"
+    },
+    "都市脑洞": {
+      "new_count": 0,
+      "dropped_count": 0,
+      "new_books": [],
+      "dropped_books": [],
+      "top_risers": [],
+      "top_fallers": [],
+      "reads_growth": [],
+      "summary": "榜单无明显变动。"
+    },
+    "玄幻脑洞": {
+      "new_count": 0,
+      "dropped_count": 0,
+      "new_books": [],
+      "dropped_books": [],
+      "top_risers": [],
+      "top_fallers": [],
+      "reads_growth": [],
+      "summary": "榜单无明显变动。"
+    },
+    "悬疑灵异": {
+      "new_count": 0,
+      "dropped_count": 0,
+      "new_books": [],
+      "dropped_books": [],
+      "top_risers": [],
+      "top_fallers": [],
+      "reads_growth": [],
+      "summary": "榜单无明显变动。"
+    },
+    "抗战谍战": {
+      "new_count": 0,
+      "dropped_count": 0,
+      "new_books": [],
+      "dropped_books": [],
+      "top_risers": [],
+      "top_fallers": [],
+      "reads_growth": [],
+      "summary": "榜单无明显变动。"
+    },
+    "游戏体育": {
+      "new_count": 0,
+      "dropped_count": 0,
+      "new_books": [],
+      "dropped_books": [],
+      "top_risers": [],
+      "top_fallers": [],
+      "reads_growth": [],
+      "summary": "榜单无明显变动。"
+    },
+    "动漫衍生": {
+      "new_count": 0,
+      "dropped_count": 0,
+      "new_books": [],
+      "dropped_books": [],
+      "top_risers": [],
+      "top_fallers": [],
+      "reads_growth": [],
+      "summary": "榜单无明显变动。"
+    },
+    "男频衍生": {
+      "new_count": 0,
+      "dropped_count": 0,
+      "new_books": [],
+      "dropped_books": [],
+      "top_risers": [],
+      "top_fallers": [],
+      "reads_growth": [],
+      "summary": "榜单无明显变动。"
+    }
+  }
+}
