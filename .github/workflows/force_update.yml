@@ -18,7 +18,7 @@ on:
         default: ''
         type: string
       ranks:
-        description: '要处理的榜单 ID（逗号分隔：female_new,male_new,female_hot,male_hot），默认全部'
+        description: '要处理的榜单 ID（逗号分隔：female_new,male_new），默认全部'
         required: false
         default: ''
         type: string

@@ -32,22 +32,6 @@ RANK_SOURCES = [
         "init_url": f"{BASE_HOST}/rank/1_1_261",
         "link_prefix": "/rank/1_1_",
     },
-    {
-        "id": "female_hot",
-        "name": "女频阅读榜",
-        "gender": "female",
-        "kind": "hot",
-        "init_url": f"{BASE_HOST}/rank/0_2_1139",
-        "link_prefix": "/rank/0_2_",
-    },
-    {
-        "id": "male_hot",
-        "name": "男频阅读榜",
-        "gender": "male",
-        "kind": "hot",
-        "init_url": f"{BASE_HOST}/rank/1_2_261",
-        "link_prefix": "/rank/1_2_",
-    },
 ]
 
 RANK_IDS = [s["id"] for s in RANK_SOURCES]

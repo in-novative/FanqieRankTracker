@@ -10,7 +10,7 @@
 
 | Feature | Description |
 |---------|-------------|
-| 🕷️ Auto Scraping | Daily automated scraping of Top 30 books across all sub-categories of the four rankings (female/male × new/hot) |
+| 🕷️ Auto Scraping | Daily automated scraping of Top 30 books across all sub-categories of the new-book rankings (female/male) |
 | 🔖 Rank Switching | Top tabs on the dashboard and trend pages switch between rankings; `?rank=` URL parameter supported |
 | 📊 Trend Analysis | Automatic day-over-day comparison per rank: new entries / dropped / rank changes / readership growth |
 | 🤖 AI Summary | OpenAI-compatible API integration for per-category market trend analysis |
@@ -76,7 +76,7 @@ To re-scrape or re-summarize selected rankings, run **Force Update (Re-scrape + 
 
 ## 🔌 Latest Data API
 
-The build script generates static JSON endpoints per ranking, directly accessible via GitHub Pages. `rank_id` options: `female_new` / `male_new` / `female_hot` / `male_hot`.
+The build script generates static JSON endpoints per ranking, directly accessible via GitHub Pages. `rank_id` options: `female_new` / `male_new`.
 
 | Type | Path | Description |
 |---|---|---|
