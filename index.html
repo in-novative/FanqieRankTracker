@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>番茄女频新书榜 · 风向标 | 每日女频趋势追踪</title>
+    <title>番茄小说榜单 · 风向标 | 每日趋势追踪</title>
     <link rel="stylesheet" href="css/style.css">
-    <meta name="description" content="番茄小说女频新书榜趋势分析与风向标">
+    <meta name="description" content="番茄小说新书榜/阅读榜趋势分析与风向标">
 </head>
 <body>
     <div class="app-container">
@@ -13,7 +13,7 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h1>番茄风向标</h1>
-                <p class="sidebar-subtitle">女频新书榜追踪</p>
+                <p class="sidebar-subtitle">小说榜单追踪</p>
                 <p id="update-date" class="update-date">加载中...</p>
             </div>
             <nav class="category-nav">
@@ -25,6 +25,10 @@
 
         <!-- 主内容区 -->
         <main class="main-content">
+            <!-- 榜单切换 Tab -->
+            <nav class="rank-tabs" id="rank-tabs" aria-label="榜单切换">
+                <span class="loading-item">加载中...</span>
+            </nav>
             <header class="main-header">
                 <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="菜单">☰</button>
                 <div class="header-left">
@@ -37,7 +41,7 @@
                         </svg>
                         <span>GitHub</span>
                     </a>
-                    <a class="trend-link-btn" href="trend.html">风向标</a>
+                    <a class="trend-link-btn" id="trend-link" href="trend.html">风向标</a>
                     <div class="date-presets" id="date-presets">
                         <button class="preset-btn active" data-preset="latest">最新</button>
                         <button class="preset-btn" data-preset="yesterday">昨日</button>

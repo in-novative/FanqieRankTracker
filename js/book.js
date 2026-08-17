@@ -10,37 +10,72 @@ document.addEventListener('DOMContentLoaded', () => {
 
     init();
 
+    let rankNameMap = {};
+
     async function init() {
         const params = new URLSearchParams(window.location.search);
         const bookId = params.get('id');
         const bookTitle = params.get('title');
+        const rankParam = params.get('rank');
         if (!bookId && !bookTitle) {
             renderEmpty('缺少作品 ID。');
             return;
         }
 
         try {
-            const dateIndex = await fetchJson(`data/dates.json?${cacheBuster}`);
-            const dates = (dateIndex.dates || []).slice().sort().slice(-maxDays);
-            const snapshots = await Promise.all(
-                dates.map(date => fetchJson(`${snapshotUrl(date)}?${cacheBuster}`).catch(() => null))
-            );
-            const records = collectBookRecords(bookId, bookTitle, dates, snapshots);
+            const [ranksMeta, dateIndex] = await Promise.all([
+                fetchJson(`data/ranks.json?${cacheBuster}`).catch(() => []),
+                fetchJson(`data/dates.json?${cacheBuster}`),
+            ]);
+            rankNameMap = {};
+            (Array.isArray(ranksMeta) ? ranksMeta : []).forEach(meta => {
+                rankNameMap[meta.id] = meta.name;
+            });
+            const datesByRank = (dateIndex && dateIndex.dates) ? dateIndex.dates : {};
+
+            // URL 指定了有效 rank 则只查该榜，否则跨全部榜单查询
+            const searchRanks = (rankParam && datesByRank[rankParam])
+                ? [rankParam]
+                : Object.keys(datesByRank);
+
+            const tasks = [];
+            searchRanks.forEach(rankId => {
+                const dates = (datesByRank[rankId] || []).slice().sort().slice(-maxDays);
+                dates.forEach(date => {
+                    tasks.push({
+                        rankId,
+                        date,
+                        promise: fetchJson(`${snapshotUrl(rankId, date)}?${cacheBuster}`).catch(() => null),
+                    });
+                });
+            });
+
+            const snapshots = await Promise.all(tasks.map(task => task.promise));
+            const records = [];
+            snapshots.forEach((snapshot, index) => {
+                const task = tasks[index];
+                collectBookRecords(task.rankId, bookId, bookTitle, task.date, snapshot).forEach(record => records.push(record));
+            });
+            records.sort((a, b) => a.date.localeCompare(b.date) || a.rankId.localeCompare(b.rankId));
 
             if (!records.length) {
                 renderEmpty('最近 30 天榜单中没有找到这本书。');
                 return;
             }
 
-            renderBook(records);
+            renderBook(records, rankParam);
         } catch (err) {
             console.error(err);
             renderEmpty('作品详情加载失败，请稍后刷新重试。');
         }
     }
 
-    function snapshotUrl(date) {
-        return `data/fanqie_female_new_ranks_${date.replace(/-/g, '')}.json`;
+    function snapshotUrl(rankId, date) {
+        return `data/fanqie_${rankId}_ranks_${date.replace(/-/g, '')}.json`;
+    }
+
+    function rankName(rankId) {
+        return rankNameMap[rankId] || rankId;
     }
 
     function fetchJson(url) {
@@ -50,34 +85,42 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function collectBookRecords(bookId, bookTitle, dates, snapshots) {
+    function collectBookRecords(rankId, bookId, bookTitle, date, snapshot) {
         const records = [];
-        snapshots.forEach((snapshot, snapshotIndex) => {
-            if (!snapshot || !snapshot.categories) return;
-            const date = dates[snapshotIndex];
-            snapshot.categories.forEach(cat => {
-                (cat.books || []).forEach((book, index) => {
-                    if (bookId && extractBookId(book.url) !== bookId) return;
-                    if (!bookId && book.title !== bookTitle) return;
-                    records.push({
-                        date,
-                        category: cat.name,
-                        rank: index + 1,
-                        readsLabel: book.reads || '未知',
-                        readsValue: parseReads(book.reads),
-                        book,
-                    });
+        if (!snapshot || !snapshot.categories) return records;
+        snapshot.categories.forEach(cat => {
+            (cat.books || []).forEach((book, index) => {
+                if (bookId && extractBookId(book.url) !== bookId) return;
+                if (!bookId && book.title !== bookTitle) return;
+                records.push({
+                    rankId,
+                    date,
+                    category: cat.name,
+                    rank: index + 1,
+                    readsLabel: book.reads || '未知',
+                    readsValue: parseReads(book.reads),
+                    book,
                 });
             });
         });
-        return records.sort((a, b) => a.date.localeCompare(b.date));
+        return records;
     }
 
-    function renderBook(records) {
+    function renderBook(records, rankParam) {
         const latest = records[records.length - 1];
         const book = latest.book;
-        const chartRecords = compactRecordsByDate(records).filter(item => item.readsValue > 0);
+
+        // 主榜单：URL 指定的榜单优先，否则取上榜记录最多的榜单
+        const countByRank = new Map();
+        records.forEach(record => countByRank.set(record.rankId, (countByRank.get(record.rankId) || 0) + 1));
+        const primaryRank = (rankParam && countByRank.has(rankParam))
+            ? rankParam
+            : Array.from(countByRank.keys()).sort((a, b) => countByRank.get(b) - countByRank.get(a))[0];
+        const primaryRecords = records.filter(record => record.rankId === primaryRank);
+
+        const chartRecords = compactRecordsByDate(primaryRecords).filter(item => item.readsValue > 0);
         const maxReads = Math.max(...records.map(item => item.readsValue || 0));
+        const rankBadges = Array.from(new Set(records.map(record => record.rankId)));
 
         detail.innerHTML = `
             <section class="book-detail-hero">
@@ -85,9 +128,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${book.cover ? `<img src="${book.cover}" alt="${escapeAttr(book.title)}">` : '<div class="no-cover">暂无封面</div>'}
                 </div>
                 <div class="detail-main">
-                    <span class="panel-kicker">${escapeHtml(latest.category)} · 第 ${latest.rank} 名</span>
+                    <span class="panel-kicker">${escapeHtml(rankName(latest.rankId))} · ${escapeHtml(latest.category)} · 第 ${latest.rank} 名</span>
                     <h1>${escapeHtml(book.title)}</h1>
                     <p class="detail-author">作者：${escapeHtml(book.author || '未知')}</p>
+                    <div class="detail-ranks">
+                        ${rankBadges.map(rankId => `<span class="detail-rank-badge${rankId === primaryRank ? ' primary' : ''}">${escapeHtml(rankName(rankId))}</span>`).join('')}
+                    </div>
                     <div class="detail-stats">
                         <span><strong>${escapeHtml(latest.readsLabel)}</strong><small>当前在读</small></span>
                         <span><strong>${escapeHtml(formatReads(maxReads))}</strong><small>近30日峰值</small></span>
@@ -104,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <section class="book-detail-grid">
                 <article class="detail-panel detail-panel-wide">
                     <span class="panel-kicker">阅读趋势</span>
-                    <h2>最近 30 天在读变化</h2>
+                    <h2>${escapeHtml(rankName(primaryRank))} · 最近 30 天在读变化</h2>
                     ${renderReadsChart(chartRecords)}
                 </article>
                 <article class="detail-panel">
@@ -298,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
             <div class="book-history-row">
                 <time>${escapeHtml(record.date)}</time>
-                <strong>${escapeHtml(record.category)} · 第 ${record.rank} 名</strong>
+                <strong>${escapeHtml(rankName(record.rankId))} · ${escapeHtml(record.category)} · 第 ${record.rank} 名</strong>
                 <span>${escapeHtml(record.readsLabel)}</span>
             </div>
         `;

@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const categoryButtons = document.getElementById('trend-category-buttons');
     const subtitle = document.getElementById('trend-subtitle');
     const rangeButtons = document.querySelectorAll('.range-btn');
+    const rankTabs = document.getElementById('rank-tabs');
     const cacheBuster = `v=${Math.floor(Date.now() / 600000)}`;
 
     let categories = [];
@@ -11,15 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedCategory = '';
     let selectedDays = 7;
 
-    const genreGroups = [
-        { name: '古风言情', categories: ['古风世情', '古言脑洞', '宫斗宅斗', '种田'] },
-        { name: '现代言情', categories: ['现言脑洞', '豪门总裁', '职场婚恋', '青春甜宠'] },
-        { name: '幻想言情', categories: ['玄幻言情', '科幻末世', '悬疑脑洞', '女频悬疑'] },
-        { name: '快穿衍生', categories: ['快穿', '女频衍生'] },
-        { name: '年代民国', categories: ['年代', '民国言情'] },
-        { name: '娱乐星光', categories: ['星光璀璨'] },
-        { name: '游戏体育', categories: ['游戏体育'] },
-    ];
+    // ========== Multi-rank state ==========
+    let rankMetas = [];        // from data/ranks.json
+    let datesByRank = {};      // from data/dates.json -> { rankId: [dates] }
+    let currentRank = 'female_new';
+    let genreGroups = [];      // per-rank, from ranks.json meta
+    let marketKeywords = [];   // per-rank, from ranks.json meta
 
     const els = {
         marketSummary: document.getElementById('market-summary'),
@@ -37,48 +35,106 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function init() {
         try {
-            const [dateIndex, latestIndex, latestAll, marketSummary] = await Promise.all([
-                fetchJson(`data/dates.json?${cacheBuster}`),
-                fetchJson(`api/lastest.json?${cacheBuster}`).catch(() => null),
-                fetchJson(`api/lastest/all.json?${cacheBuster}`)
-                    .catch(() => fetchJson(`data/latest_ranks.json?${cacheBuster}`)),
+            const [ranks, dateIndex, marketSummary] = await Promise.all([
+                fetchJson(`data/ranks.json?${cacheBuster}`).catch(() => []),
+                fetchJson(`data/dates.json?${cacheBuster}`).catch(() => null),
                 fetchJson(`data/market_summary.json?${cacheBuster}`).catch(() => null),
             ]);
-            latestData = latestAll;
+            rankMetas = Array.isArray(ranks) ? ranks : [];
+            datesByRank = (dateIndex && dateIndex.dates) ? dateIndex.dates : {};
             marketSummaryData = marketSummary;
 
-            categories = latestIndex && latestIndex.types
-                ? latestIndex.types.filter(item => item.type !== 'all').map(item => item.type)
-                : await loadCategoriesFallback();
+            // Resolve rank from URL: must exist and have data
+            const rankParam = new URLSearchParams(window.location.search).get('rank');
+            currentRank = rankParam && datesByRank[rankParam]
+                ? rankParam
+                : (datesByRank[currentRank] ? currentRank : Object.keys(datesByRank)[0] || currentRank);
 
-            const dates = (dateIndex.dates || []).slice().sort();
-            const trendDates = dates.slice(1);
-            const trendFiles = await Promise.all(
-                trendDates.map(date => fetchJson(`data/trends/${date}.json?${cacheBuster}`).catch(() => null))
-            );
-            trendRows = trendFiles
-                .filter(Boolean)
-                .map(item => ({ date: item.date, prevDate: item.prev_date, trends: item.trends || {} }))
-                .sort((a, b) => a.date.localeCompare(b.date));
-
-            if (trendRows.length === 0 || categories.length === 0) {
-                renderEmpty('暂无可分析的趋势数据。');
-                return;
-            }
-
-            selectedCategory = getInitialCategory();
-            renderCategoryButtons();
+            renderRankTabs();
             bindEvents();
-            render();
+            await loadRankData(currentRank);
         } catch (err) {
             console.error(err);
             renderEmpty('趋势数据加载失败，请稍后刷新重试。');
         }
     }
 
-    async function loadCategoriesFallback() {
-        const latest = await fetchJson(`data/latest_ranks.json?${cacheBuster}`);
-        return (latest.categories || []).map(cat => cat.name);
+    async function loadRankData(rankId) {
+        const meta = rankMetas.find(item => item.id === rankId) || {};
+        genreGroups = meta.genre_groups || [];
+        marketKeywords = meta.market_keywords || [];
+
+        const [latestIndex, latestAll] = await Promise.all([
+            fetchJson(`api/${rankId}/lastest/index.json?${cacheBuster}`).catch(() => null),
+            fetchJson(`api/${rankId}/lastest/all.json?${cacheBuster}`)
+                .catch(() => fetchJson(`data/latest/${rankId}.json?${cacheBuster}`)),
+        ]);
+        latestData = latestAll;
+
+        categories = latestIndex && latestIndex.types
+            ? latestIndex.types.filter(item => item.type !== 'all').map(item => item.type)
+            : (latestAll.categories || []).map(cat => cat.name);
+
+        const dates = (datesByRank[rankId] || []).slice().sort();
+        const trendDates = dates.slice(1);
+        const trendFiles = await Promise.all(
+            trendDates.map(date => fetchJson(`data/trends/${rankId}/${date}.json?${cacheBuster}`).catch(() => null))
+        );
+        trendRows = trendFiles
+            .filter(Boolean)
+            .map(item => ({ date: item.date, prevDate: item.prev_date, trends: item.trends || {} }))
+            .sort((a, b) => a.date.localeCompare(b.date));
+
+        if (trendRows.length === 0 || categories.length === 0) {
+            renderEmpty('暂无可分析的趋势数据。');
+            return;
+        }
+
+        selectedCategory = getInitialCategory();
+        renderCategoryButtons();
+        render();
+    }
+
+    // ========== Rank Tabs ==========
+    function renderRankTabs() {
+        if (!rankMetas.length) {
+            rankTabs.innerHTML = '';
+            return;
+        }
+        rankTabs.innerHTML = rankMetas.map(meta => {
+            const hasData = (datesByRank[meta.id] || []).length > 0;
+            return `
+                <button class="rank-tab${meta.id === currentRank ? ' active' : ''}${hasData ? '' : ' disabled'}"
+                        type="button" data-rank="${escapeAttr(meta.id)}"
+                        ${hasData ? '' : 'disabled title="暂无数据，等待首次抓取"'}>
+                    ${escapeHtml(meta.name)}
+                </button>
+            `;
+        }).join('');
+
+        rankTabs.querySelectorAll('.rank-tab:not(.disabled)').forEach(btn => {
+            btn.addEventListener('click', () => switchRank(btn.dataset.rank));
+        });
+    }
+
+    async function switchRank(rankId) {
+        if (rankId === currentRank) return;
+        currentRank = rankId;
+        selectedCategory = '';
+
+        const url = new URL(window.location.href);
+        url.searchParams.set('rank', rankId);
+        url.searchParams.delete('type');
+        history.replaceState(null, '', url);
+
+        renderRankTabs();
+        subtitle.textContent = '加载中...';
+        try {
+            await loadRankData(rankId);
+        } catch (err) {
+            console.error(err);
+            renderEmpty('趋势数据加载失败，请稍后刷新重试。');
+        }
     }
 
     function fetchJson(url) {
@@ -287,15 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function collectHotThemes(rowsWindow) {
-        const keywords = [
-            '重生', '穿书', '快穿', '系统', '空间', '团宠', '萌宝', '幼崽', '女配', '炮灰',
-            '反派', '权臣', '宅斗', '宫斗', '和离', '替嫁', '逃荒', '种田', '美食', '经商',
-            '年代', '七零', '八零', '军婚', '豪门', '总裁', '真假千金', '先婚后爱', '追妻',
-            '甜宠', '双洁', '强制爱', '无CP', '末世', '废土', '天灾', '囤货', '异能',
-            '国运', '星际', '修仙', '玄学', '无限流', '悬疑', '直播', '综艺', '娱乐圈',
-            '校园', '暗恋', '青梅竹马', '民国', '兽世', '远古', '基建'
-        ];
-        const scoreMap = new Map(keywords.map(name => [name, { name, count: 0, categories: new Set() }]));
+        const scoreMap = new Map(marketKeywords.map(name => [name, { name, count: 0, categories: new Set() }]));
 
         const latestBookMap = buildLatestBookMap();
 
@@ -305,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!trend) return;
                 (trend.new_books || []).forEach(title => {
                     const book = latestBookMap.get(title) || {};
-                    addThemeHits(scoreMap, keywords, `${title} ${book.intro || ''}`, catName, 1);
+                    addThemeHits(scoreMap, `${title} ${book.intro || ''}`, catName, 1);
                 });
             });
         });
@@ -331,12 +379,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return match ? match[1] : '';
     }
 
-    function addThemeHits(scoreMap, keywords, text, categoryName, weight) {
+    function addThemeHits(scoreMap, text, categoryName, weight) {
         const source = String(text || '');
         if (!source) return;
-        keywords.forEach(keyword => {
+        scoreMap.forEach((item, keyword) => {
             if (!source.includes(keyword)) return;
-            const item = scoreMap.get(keyword);
             item.count += weight;
             item.categories.add(categoryName);
         });
@@ -396,8 +443,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const book = latestBookMap.get(item.title) || {};
             const bookId = extractBookId(book.url);
             const detailUrl = bookId
-                ? `book.html?id=${encodeURIComponent(bookId)}`
-                : `book.html?title=${encodeURIComponent(item.title)}`;
+                ? `book.html?id=${encodeURIComponent(bookId)}&rank=${encodeURIComponent(currentRank)}`
+                : `book.html?title=${encodeURIComponent(item.title)}&rank=${encodeURIComponent(currentRank)}`;
 
             return `
             <a class="compact-row compact-row-link" href="${detailUrl}" target="_blank" rel="noopener noreferrer">
@@ -448,9 +495,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getMarketSummaryForPeriod() {
-        if (!marketSummaryData || !marketSummaryData.periods) return null;
+        if (!marketSummaryData || !marketSummaryData.by_rank) return null;
+        const rankPayload = marketSummaryData.by_rank[currentRank];
+        if (!rankPayload || !rankPayload.periods) return null;
         const key = selectedDays === 'all' ? 'all' : String(selectedDays);
-        const item = marketSummaryData.periods[key];
+        const item = rankPayload.periods[key];
         if (!item || !item.summary) return null;
         return item;
     }

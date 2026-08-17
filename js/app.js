@@ -12,12 +12,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const dateInput = document.getElementById('date-input');
     const datePrevBtn = document.getElementById('date-prev');
     const dateNextBtn = document.getElementById('date-next');
+    const rankTabs = document.getElementById('rank-tabs');
 
     let allData = null;
     let typingTimer = null;
-    let availableDates = [];   // sorted list of "YYYY-MM-DD"
+    let availableDates = [];   // sorted list of "YYYY-MM-DD" (for current rank)
     let currentDateIndex = -1; // index into availableDates
     let currentCategory = null; // preserve selected category across date switches
+
+    // ========== Multi-rank state ==========
+    let rankMetas = [];          // from data/ranks.json
+    let datesByRank = {};        // from data/dates.json -> { rankId: [dates] }
+    let currentRank = 'female_new';
 
     // Cache-busting: 每10分钟一个新key，避免浏览器缓存旧JSON
     const cacheBuster = `v=${Math.floor(Date.now() / 600000)}`;
@@ -169,27 +175,83 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ========== Load dates index, then load latest ==========
-    fetch(`data/dates.json?${cacheBuster}`)
-        .then(r => r.ok ? r.json() : Promise.reject('No dates.json'))
-        .then(idx => {
-            availableDates = idx.dates || [];
-            if (availableDates.length > 0) {
-                // Set min/max for native date input
-                dateInput.min = availableDates[0];
-                dateInput.max = availableDates[availableDates.length - 1];
-            }
-            // Start by loading latest_ranks.json (already has trend data baked in)
-            return loadLatestData();
-        })
-        .catch(() => {
-            // Fallback: no dates.json available, just load latest
-            console.warn('dates.json not found, falling back to latest only');
-            loadLatestData();
+    // ========== Load rank meta + dates index, then load latest ==========
+    const initialRankParam = new URLSearchParams(window.location.search).get('rank');
+
+    Promise.all([
+        fetch(`data/ranks.json?${cacheBuster}`).then(r => r.ok ? r.json() : []),
+        fetch(`data/dates.json?${cacheBuster}`).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([ranks, dateIndex]) => {
+        rankMetas = Array.isArray(ranks) ? ranks : [];
+        datesByRank = (dateIndex && dateIndex.dates) ? dateIndex.dates : {};
+
+        if (!rankMetas.length) {
+            rankTabs.innerHTML = '';
+        }
+
+        // Validate rank from URL: must exist and have data
+        currentRank = initialRankParam && datesByRank[initialRankParam]
+            ? initialRankParam
+            : (datesByRank[currentRank] ? currentRank : Object.keys(datesByRank)[0] || currentRank);
+
+        renderRankTabs();
+        setRankDates(currentRank);
+        loadLatestData();
+    }).catch(err => {
+        console.error(err);
+        rankTabs.innerHTML = '';
+        loadLatestData();
+    });
+
+    // ========== Rank Tabs ==========
+    function renderRankTabs() {
+        rankTabs.innerHTML = rankMetas.map(meta => {
+            const hasData = (datesByRank[meta.id] || []).length > 0;
+            return `
+                <button class="rank-tab${meta.id === currentRank ? ' active' : ''}${hasData ? '' : ' disabled'}"
+                        type="button" data-rank="${escapeAttr(meta.id)}"
+                        ${hasData ? '' : 'disabled title="暂无数据，等待首次抓取"'}>
+                    ${escapeHtml(meta.name)}
+                </button>
+            `;
+        }).join('');
+
+        rankTabs.querySelectorAll('.rank-tab:not(.disabled)').forEach(btn => {
+            btn.addEventListener('click', () => switchRank(btn.dataset.rank));
         });
 
+        // Keep the trend-page link in sync with the current rank
+        const trendLink = document.getElementById('trend-link');
+        if (trendLink) trendLink.href = `trend.html?rank=${encodeURIComponent(currentRank)}`;
+    }
+
+    function switchRank(rankId) {
+        if (rankId === currentRank) return;
+        currentRank = rankId;
+        currentCategory = null;
+        allData = null;
+
+        // Keep rank in URL for sharing/refresh
+        const url = new URL(window.location.href);
+        url.searchParams.set('rank', rankId);
+        history.replaceState(null, '', url);
+
+        renderRankTabs();
+        setRankDates(rankId);
+        loadLatestData();
+    }
+
+    function setRankDates(rankId) {
+        availableDates = (datesByRank[rankId] || []).slice().sort();
+        currentDateIndex = -1;
+        if (availableDates.length > 0) {
+            dateInput.min = availableDates[0];
+            dateInput.max = availableDates[availableDates.length - 1];
+        }
+    }
+
     function loadLatestData() {
-        return fetch(`data/latest_ranks.json?${cacheBuster}`)
+        return fetch(`data/latest/${currentRank}.json?${cacheBuster}`)
             .then(r => {
                 if (!r.ok) throw new Error('Network error');
                 return r.json();
@@ -214,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadDateData(dateStr) {
-        // dateStr = "YYYY-MM-DD", file = fanqie_female_new_ranks_YYYYMMDD.json
+        // dateStr = "YYYY-MM-DD", file = fanqie_{rank}_ranks_YYYYMMDD.json
         const fileDateStr = dateStr.replace(/-/g, '');
         const isLatest = currentDateIndex === availableDates.length - 1;
 
@@ -227,15 +289,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // Show loading state
         waterfall.innerHTML = '<p style="color:var(--text-muted);padding:20px;">加载中...</p>';
 
-        const snapshotUrl = `data/fanqie_female_new_ranks_${fileDateStr}.json?${cacheBuster}`;
-        const trendUrl = `data/trends/${dateStr}.json?${cacheBuster}`;
+        const snapshotUrl = `data/fanqie_${currentRank}_ranks_${fileDateStr}.json?${cacheBuster}`;
+        const trendUrl = `data/trends/${currentRank}/${dateStr}.json?${cacheBuster}`;
 
         // Load snapshot + trends in parallel
         Promise.all([
             fetch(snapshotUrl).then(r => r.ok ? r.json() : Promise.reject('No snapshot')),
             fetch(trendUrl).then(r => r.ok ? r.json() : null).catch(() => null)
         ]).then(([snapshot, trendData]) => {
-            // Build a data object in the same shape as latest_ranks.json
+            // Build a data object in the same shape as latest/{rank}.json
             const combined = {
                 date: snapshot.date,
                 prev_date: trendData ? trendData.prev_date : '',
@@ -448,7 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const rank = index + 1;
             const card = document.createElement('a');
             const bookId = extractBookId(book.url);
-            card.href = bookId ? `book.html?id=${encodeURIComponent(bookId)}` : 'javascript:void(0)';
+            card.href = bookId ? `book.html?id=${encodeURIComponent(bookId)}&rank=${encodeURIComponent(currentRank)}` : 'javascript:void(0)';
             card.rel = 'noopener';
             card.className = 'book-card';
 

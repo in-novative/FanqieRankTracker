@@ -17,6 +17,11 @@ on:
         required: false
         default: ''
         type: string
+      ranks:
+        description: '要处理的榜单 ID（逗号分隔：female_new,male_new,female_hot,male_hot），默认全部'
+        required: false
+        default: ''
+        type: string
 
 jobs:
   force-update:
@@ -74,12 +79,24 @@ jobs:
 
     - name: Run Scraper (仅当天)
       if: steps.date.outputs.is_today == 'true'
-      run: python scrape_fanqie_ranks.py
+      run: |
+        RANKS_INPUT="${{ github.event.inputs.ranks }}"
+        if [ -n "$RANKS_INPUT" ]; then
+          python scrape_fanqie_ranks.py --ranks "$RANKS_INPUT"
+        else
+          python scrape_fanqie_ranks.py
+        fi
       env:
         GITHUB_ACTIONS: true
 
     - name: Build Latest Data with AI Summary (Force)
-      run: pip install openai && python scripts/build_latest.py --force --date ${{ steps.date.outputs.dash_date }}
+      run: |
+        RANKS_INPUT="${{ github.event.inputs.ranks }}"
+        if [ -n "$RANKS_INPUT" ]; then
+          pip install openai && python scripts/build_latest.py --force --date ${{ steps.date.outputs.dash_date }} --rank "$RANKS_INPUT"
+        else
+          pip install openai && python scripts/build_latest.py --force --date ${{ steps.date.outputs.dash_date }}
+        fi
       env:
         API_BASE_URL: ${{ secrets.API_BASE_URL }}
         API_KEY: ${{ secrets.API_KEY }}
@@ -92,7 +109,7 @@ jobs:
       uses: stefanzweifel/git-auto-commit-action@v5
       with:
         commit_message: "[Force] Re-summarize Fanqie ranks (${{ steps.date.outputs.dash_date }})"
-        file_pattern: data/*
+        file_pattern: data api
         branch: main
 
     # ---- Deploy to GitHub Pages ----
