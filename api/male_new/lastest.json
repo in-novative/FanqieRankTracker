@@ -1,19 +1,19 @@
 {
   "rank_id": "male_new",
   "rank_name": "男频新书榜",
-  "date": "2026-09-01",
-  "prev_date": "2026-08-31",
+  "date": "2026-09-02",
+  "prev_date": "2026-09-01",
   "types": [
     {
       "type": "all",
       "url": "api/male_new/lastest/all.json",
       "category_count": 19,
-      "book_count": 381
+      "book_count": 382
     },
     {
       "type": "西方奇幻",
       "url": "api/male_new/lastest/%E8%A5%BF%E6%96%B9%E5%A5%87%E5%B9%BB.json",
-      "book_count": 21
+      "book_count": 22
     },
     {
       "type": "东方仙侠",
