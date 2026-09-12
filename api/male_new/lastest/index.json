@@ -1,19 +1,19 @@
 {
   "rank_id": "male_new",
   "rank_name": "男频新书榜",
-  "date": "2026-09-11",
-  "prev_date": "2026-09-10",
+  "date": "2026-09-12",
+  "prev_date": "2026-09-11",
   "types": [
     {
       "type": "all",
       "url": "api/male_new/lastest/all.json",
       "category_count": 19,
-      "book_count": 380
+      "book_count": 320
     },
     {
       "type": "西方奇幻",
       "url": "api/male_new/lastest/%E8%A5%BF%E6%96%B9%E5%A5%87%E5%B9%BB.json",
-      "book_count": 20
+      "book_count": 10
     },
     {
       "type": "东方仙侠",
@@ -28,7 +28,7 @@
     {
       "type": "都市日常",
       "url": "api/male_new/lastest/%E9%83%BD%E5%B8%82%E6%97%A5%E5%B8%B8.json",
-      "book_count": 20
+      "book_count": 10
     },
     {
       "type": "都市修真",
@@ -58,7 +58,7 @@
     {
       "type": "传统玄幻",
       "url": "api/male_new/lastest/%E4%BC%A0%E7%BB%9F%E7%8E%84%E5%B9%BB.json",
-      "book_count": 20
+      "book_count": 0
     },
     {
       "type": "历史脑洞",
@@ -78,7 +78,7 @@
     {
       "type": "玄幻脑洞",
       "url": "api/male_new/lastest/%E7%8E%84%E5%B9%BB%E8%84%91%E6%B4%9E.json",
-      "book_count": 20
+      "book_count": 0
     },
     {
       "type": "悬疑灵异",
